@@ -1,0 +1,6 @@
+.venv
+src/db
+.idea
+.env*
+build.sh
+increment_version.sh
