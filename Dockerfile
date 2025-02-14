@@ -1,6 +1,10 @@
 # Use the official Python image
 FROM python:3.9-slim
 
+# Prevent Python from generating .pyc files
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
 ARG VERSION
 LABEL version=$VERSION
 

@@ -1,5 +1,6 @@
 .venv
-src/db
+db
+dotenv
 .idea
 .env*
 build.sh

@@ -65,6 +65,7 @@ def main():
     bot_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
     print(f"Running in {env} mode")
+    print(f"Db Url:", db_url)
 
     check_db(con)
 
