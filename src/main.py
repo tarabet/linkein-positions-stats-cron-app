@@ -5,7 +5,7 @@ import urllib.parse
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from labels_mapper import labels_mapper
-from src.db_utils import db_insert
+from db_utils import db_insert
 from tech_list import tech_list
 from random import randint
 from time import sleep
