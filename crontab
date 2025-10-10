@@ -1,2 +1,2 @@
 # crontab
-0 21 * * * export $(cat /app/.env.test | xargs) && /usr/local/bin/python3 /app/main.py >> /var/log/cron.log 2>&1
+0 21 * * * export $(cat /app/dotenv/.env.test | xargs) && /usr/local/bin/python3 /app/main.py >> /var/log/cron.log 2>&1
