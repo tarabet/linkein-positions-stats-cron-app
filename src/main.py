@@ -66,7 +66,7 @@ def main():
 
             if i == len(tech_list) - 1:
                 job_finished_time = datetime.datetime.today().isoformat()
-                response = requests.get(bot_url, params={"chat_id": bot_chat_id, "text": f"All positions scraped on {job_finished_time}. Saved in {db_url} database."})
+                response = requests.get(bot_url, params={"chat_id": bot_chat_id, "text": f"All positions scraped on {job_finished_time}"})
 
                 if response.status_code == 200:
                     print("Message sent successfully!")
