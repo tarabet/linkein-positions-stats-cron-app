@@ -8,6 +8,10 @@ This application runs as a cron job to gather statistics about job positions fro
 
 ## Configuration
 
+### DB Config
+
+Current implementation is set up to work with Posgress DB using SQLAlchemy. Feel free to change db_utils to work with other DB.
+
 ### Environment Variables
 
 Create a `.env` file in the root directory with the following variables (template provided in `.env.template`):
