@@ -3,6 +3,6 @@ db
 dotenv
 .idea
 .env.prod
-.env.test
+.env.dev
 build.sh
 increment_version.sh

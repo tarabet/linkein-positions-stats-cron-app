@@ -12,7 +12,11 @@ from time import sleep
 import datetime
 from loguru import logger as log
 
-load_dotenv()
+APP_ENV = os.getenv("ENV", "dev")  # default fallback
+env_file = f".env.{APP_ENV}"
+
+load_dotenv(env_file)
+log.info(f"Loaded {APP_ENV} environment file")
 
 
 def get_data_by_label_id(soup, label_id: str) -> str:
