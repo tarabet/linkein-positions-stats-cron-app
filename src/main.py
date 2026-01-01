@@ -1,6 +1,7 @@
 import requests
 import os
 import urllib.parse
+from pathlib import Path
 
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -13,10 +14,18 @@ import datetime
 from loguru import logger as log
 
 APP_ENV = os.getenv("ENV", "dev")  # default fallback
-env_file = f".env.{APP_ENV}"
+env_file = Path(f".env.{APP_ENV}")
+is_railway = bool(os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY_PROJECT_ID"))
 
-load_dotenv(env_file)
-log.info(f"Loaded {APP_ENV} environment file")
+if not is_railway:
+    load_dotenv(".env", override=False)
+    if env_file.exists():
+        load_dotenv(env_file, override=True)
+        log.info(f"Loaded {APP_ENV} environment file")
+    else:
+        log.info(f"No .env file found for {APP_ENV}, relying on environment variables")
+else:
+    log.info("Running with Railway-provided environment variables")
 
 
 def get_data_by_label_id(soup, label_id: str) -> str:
@@ -53,13 +62,23 @@ def get_page_content(tech: str):
     return stats_obj
 
 def main():
-    env = os.environ.get("ENV")
-    db_url = os.getenv("DB_URL", env)
-    bot_token = os.getenv("BOT_TOKEN", env)
-    bot_chat_id = os.getenv("BOT_CHAT_ID", env)
+    db_url = os.getenv("DB_URL")
+    bot_token = os.getenv("BOT_TOKEN")
+    bot_chat_id = os.getenv("BOT_CHAT_ID")
+    # These values previously fell back to the ENV label, which was not a usable configuration.
+    # Require explicit values to avoid silently running with invalid credentials.
+    required_env = {
+        "DB_URL": db_url,
+        "BOT_TOKEN": bot_token,
+        "BOT_CHAT_ID": bot_chat_id,
+    }
+    # Fail fast when mandatory settings are missing instead of running with invalid defaults.
+    missing_env = [name for name, value in required_env.items() if not value]
+    if missing_env:
+        raise ValueError(f"Missing required environment variables: {', '.join(missing_env)}")
     bot_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
-    log.info(f"Running in {env} mode")
+    log.info(f"Running in {APP_ENV} mode")
 
     try:
         for i, tech in enumerate(tech_list):

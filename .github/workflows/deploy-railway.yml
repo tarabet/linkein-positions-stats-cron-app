@@ -1,0 +1,45 @@
+name: Deploy to Railway
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Railway environment name (optional)"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+      RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+      RAILWAY_ENVIRONMENT: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.11.0"
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        run: |
+          for var in RAILWAY_TOKEN RAILWAY_PROJECT_ID RAILWAY_SERVICE_ID; do
+            if [ -z "${!var}" ]; then
+              echo "$var secret is required" && exit 1
+            fi
+          done
+          railway login --token "$RAILWAY_TOKEN"
+          if [ -n "$RAILWAY_ENVIRONMENT" ]; then
+            railway use --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT"
+          else
+            railway use --project "$RAILWAY_PROJECT_ID"
+          fi
+          railway up --service "$RAILWAY_SERVICE_ID" --detach
