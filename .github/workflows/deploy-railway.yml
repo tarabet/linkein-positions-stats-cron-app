@@ -24,22 +24,38 @@ jobs:
       - name: Install Railway CLI
         run: npm i -g @railway/cli
 
+      - name: Resolve Railway service id
+        shell: bash
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            echo "RAILWAY_SERVICE_ID=${{ secrets.RAILWAY_SERVICE_ID_PROD }}" >> "$GITHUB_ENV"
+          elif [ "${{ inputs.environment }}" = "development" ]; then
+            echo "RAILWAY_SERVICE_ID=${{ secrets.RAILWAY_SERVICE_ID_DEV }}" >> "$GITHUB_ENV"
+          else
+            echo "Unknown environment: ${{ inputs.environment }}" >&2
+            exit 1
+          fi
+
       - name: Deploy to Railway
         env:
-          RAILWAY_TOKEN:  ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway up --service=${{ secrets.RAILWAY_SERVICE_ID }}
+          if [ -z "$RAILWAY_SERVICE_ID" ]; then
+            echo "RAILWAY_SERVICE_ID is not set" >&2
+            exit 1
+          fi
+          railway up --service="$RAILWAY_SERVICE_ID"
 
       - name: Send Telegram Notification
         if: success()
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
             -d "chat_id=${{ secrets.BOT_CHAT_ID }}" \
-            -d "text=✅ LinkedIn-positions-stats-cron-app successfully deployed to Railway (production)"
+            -d "text=✅ LinkedIn-positions-stats-cron-app successfully deployed to Railway (${{ inputs.environment }})"
 
       - name: Send Failure Notification
         if: failure()
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
             -d "chat_id=${{ secrets.BOT_CHAT_ID }}" \
-            -d "text=❌ LinkedIn-positions-stats-cron-app deployment to Railway failed"
+            -d "text=❌ LinkedIn-positions-stats-cron-app deployment to Railway failed (${{ inputs.environment }})"
