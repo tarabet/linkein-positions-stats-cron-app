@@ -1,45 +1,44 @@
 name: Deploy to Railway
 
+# Only trigger on manual dispatch
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: "Railway environment name (optional)"
-        required: false
-
-permissions:
-  contents: read
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-      RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
-      RAILWAY_ENVIRONMENT: ${{ github.event.inputs.environment }}
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20.11.0"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Install Railway CLI
-        run: npm install -g @railway/cli
+        run: npm i -g @railway/cli
 
       - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN:  ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          for var in RAILWAY_TOKEN RAILWAY_PROJECT_ID RAILWAY_SERVICE_ID; do
-            if [ -z "${!var}" ]; then
-              echo "$var secret is required" && exit 1
-            fi
-          done
-          railway login --token "$RAILWAY_TOKEN"
-          if [ -n "$RAILWAY_ENVIRONMENT" ]; then
-            railway use --project "$RAILWAY_PROJECT_ID" --environment "$RAILWAY_ENVIRONMENT"
-          else
-            railway use --project "$RAILWAY_PROJECT_ID"
-          fi
-          railway up --service "$RAILWAY_SERVICE_ID" --detach
+          railway up --service=${{ secrets.RAILWAY_SERVICE_ID }}
+
+      - name: Send Telegram Notification
+        if: success()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.BOT_CHAT_ID }}" \
+            -d "text=✅ LinkedIn-positions-stats-cron-app successfully deployed to Railway (production)"
+
+      - name: Send Failure Notification
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.BOT_CHAT_ID }}" \
+            -d "text=❌ LinkedIn-positions-stats-cron-app deployment to Railway failed"
