@@ -11,6 +11,7 @@ on:
         type: choice
         options:
           - production
+          - development
 
 jobs:
   deploy:
