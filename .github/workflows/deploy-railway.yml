@@ -30,17 +30,17 @@ jobs:
           if [ "${{ inputs.environment }}" = "production" ]; then
             echo "RAILWAY_SERVICE_ID=${{ secrets.RAILWAY_SERVICE_ID_PROD }}" >> "$GITHUB_ENV"
             echo "RAILWAY_ENVIRONMENT_ID=${{ secrets.RAILWAY_ENVIRONMENT_ID_PROD }}" >> "$GITHUB_ENV"
+            echo "RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}" >> "$GITHUB_ENV"
           elif [ "${{ inputs.environment }}" = "development" ]; then
             echo "RAILWAY_SERVICE_ID=${{ secrets.RAILWAY_SERVICE_ID_DEV }}" >> "$GITHUB_ENV"
             echo "RAILWAY_ENVIRONMENT_ID=${{ secrets.RAILWAY_ENVIRONMENT_ID_DEV }}" >> "$GITHUB_ENV"
+            echo "RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN_DEV }}" >> "$GITHUB_ENV"
           else
             echo "Unknown environment: ${{ inputs.environment }}" >&2
             exit 1
           fi
 
       - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           if [ -z "$RAILWAY_SERVICE_ID" ]; then
             echo "RAILWAY_SERVICE_ID is not set" >&2
@@ -48,6 +48,10 @@ jobs:
           fi
           if [ -z "$RAILWAY_ENVIRONMENT_ID" ]; then
             echo "RAILWAY_ENVIRONMENT_ID is not set" >&2
+            exit 1
+          fi
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "RAILWAY_TOKEN is not set" >&2
             exit 1
           fi
           railway up --service="$RAILWAY_SERVICE_ID" --environment="$RAILWAY_ENVIRONMENT_ID"
